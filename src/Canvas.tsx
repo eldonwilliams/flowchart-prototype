@@ -24,8 +24,13 @@ function Canvas({ renderFn, ...canvasProps }: CanvasProps) {
 
     const revalidate = () => {
         if (canvasRef.current === null) return;
+        var dpr = window.devicePixelRatio || 1;
+        var rect = canvasRef.current.getBoundingClientRect();
+        canvasRef.current.width = rect.width * dpr;
+        canvasRef.current.height = rect.height * dpr;
         const ctx = canvasRef.current.getContext("2d");
         if (ctx === null) return;
+        ctx.scale(dpr, dpr);
         // TODO: there should be some selective re-rendering here, or making sub-canvases.
         // Possibly groups could be canvases?
         // But, for a first prototype, this works
