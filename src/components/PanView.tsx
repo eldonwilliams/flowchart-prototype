@@ -156,7 +156,7 @@ export default function PanView({ stateFunction, draggable = true, onPanViewDrag
         viewRef.current.style.transform = `translate(${-state.x}px, ${-state.y}px) scale(${state.scale})`;
         viewRef.current.style.transformOrigin = `${state.x + rect.width / 2}px ${state.y + rect.height / 2}px`;
         if (stateFunction) stateFunction(state);
-    }, [state.x, state.y, state.scale, containerRef, viewRef, stateFunction]);
+    }, [state, containerRef, viewRef, stateFunction]);
 
     return (
         <div className="panview-container" ref={state.containerRef}>
