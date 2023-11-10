@@ -1,18 +1,12 @@
-import PanView, { PanViewState } from "./PanView";
+import PanView, { PanViewCoordinatesToGlobal, PanViewState } from "./PanView";
 import './FlowchartRender.css';
-import { FlowchartSelectionState } from "../FlowchartComponents";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Canvas from "../Canvas";
+import FlowchartPrimitive from "../FlowchartComponents/FlowchartPrimitive";
+import FlowchartRectangle from "../FlowchartComponents/FlowchartRectangle";
 
 export interface FlowchartRenderProps {
-    selectionState: FlowchartSelectionState
-}
 
-interface RectangleDefinition {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
 }
 
 /**
@@ -21,62 +15,41 @@ interface RectangleDefinition {
  * @returns 
  */
 export default function FlowchartRender(props: FlowchartRenderProps) {
-    const [elements, setElements] = useState<RectangleDefinition[]>([]);
     const [renderStateRef, setRenderStateRef] = useState<PanViewState | null>();
 
-    function addRectangle(x: number, y: number) {
-        setElements(v => [...v, {
-            x, y, width: 10, height: 10
-        }]);
-    }
+    const [elements, setElements] = useState<FlowchartPrimitive[]>([]);
+
+    useEffect(() => {
+        setElements([ new FlowchartRectangle(30, 50, 20, 10)])
+    }, []);
 
     return (
         <>
             <PanView
-                draggable={props.selectionState === "pointer"}
                 stateFunction={setRenderStateRef}
+                viewChildren={
+                        <Canvas
+                            renderFn={(ctx) => {
+                                if (!renderStateRef) return;
+                                ctx.strokeStyle = "#000";
+                                ctx.beginPath();
+                                const [x1, y1] = PanViewCoordinatesToGlobal(renderStateRef, 10, 10);
+                                const [x2, y2] = PanViewCoordinatesToGlobal(renderStateRef, 30, 30);
+                                ctx.moveTo(x1, y1);
+                                ctx.lineTo(x2, y2);
+                                ctx.stroke();
+                            }}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                            }}
+                        />
+                }
             >
                 {elements.map((v, i) => <Fragment key={i}>
-                        <div style={{
-                            transform: `translate(${v.x}px, ${v.y}px)`,
-                            width: v.width,
-                            height: v.height,
-                            background: '#000',
-                            position: 'absolute',
-                        }} />
-                    </Fragment>
-                )}
-                <Canvas
-                    renderFn={(ctx) => {
-                        ctx.scale(renderStateRef?.scale ?? 1, renderStateRef?.scale ?? 1);
-                        ctx.strokeStyle = "#000";
-
-                        elements.forEach((currentElement, index) => {
-                            if (index + 1 >= elements.length) return;
-                            const nextElement = elements[index + 1];
-                            ctx.beginPath();
-                            ctx.moveTo(currentElement.x + currentElement.width / 2, currentElement.y + currentElement.height / 2);
-                            ctx.lineTo(nextElement.x + currentElement.width / 2, nextElement.y + currentElement.height / 2);
-                            ctx.stroke();
-                        });
-                    }}
-                    style={{
-                        position: 'absolute',
-                        width: '100%',
-                        height: '100%',
-                    }}
-                />
+                    {v.render()}
+                </Fragment>)}
             </PanView>
-            <button
-                onClick={() => addRectangle(Math.random() * 300, Math.random() * 300)}
-            >
-                Click to add element, random pos
-            </button>
-            <button
-                onClick={() => setElements(v => v.slice(0, v.length - 1))}
-            >
-                Remove random element
-            </button>
         </>
     );
 }
