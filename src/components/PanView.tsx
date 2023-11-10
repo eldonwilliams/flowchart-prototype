@@ -1,4 +1,4 @@
-import { ComponentPropsWithoutRef, useEffect, useReducer, useRef, useState } from "react";
+import { ComponentPropsWithoutRef, ReactNode, useEffect, useReducer, useRef, useState } from "react";
 import './PanView.css';
 
 /**
@@ -56,6 +56,8 @@ export interface PanViewProps extends ComponentPropsWithoutRef<"div"> {
     // can this panview be dragged or scaled? If not set, true
     draggable?: boolean;
 
+    viewChildren?: ReactNode
+
     onPanViewDrag?: (e: PanViewDragEvent) => void;
     onPanViewScroll?: (e: PanViewScrollEvent) => void;
 
@@ -99,11 +101,24 @@ function PanViewStateReducer(state: PanViewState, action: PanViewStateReducerAct
     return stateCopy;
 }
 
+export function PanViewCoordinatesToGlobal(state: PanViewState, x: number, y: number): [number, number] {
+    const containerRect = state.containerRef.current?.getBoundingClientRect()!;
+    let [centerX, centerY] = [
+        containerRect.x - containerRect.left + containerRect.width / 2,
+        containerRect.y - containerRect.top + containerRect.height / 2
+    ];
+    // todo: may need to make center coords in the coordinate space of the canvas
+    return [
+        (x - state.x - centerX) * state.scale + centerX,
+        (y - state.y - centerY) * state.scale + centerY
+    ]
+}
+
 /**
  * A component with a inner object whose position is panned and dragged by the major element.
  * Can have children
  */
-export default function PanView({ stateFunction, draggable = true, onPanViewDrag, onPanViewScroll, ...props }: PanViewProps) {
+export default function PanView({ stateFunction, draggable = true, onPanViewDrag, onPanViewScroll, viewChildren, ...props }: PanViewProps) {
     const [state, mutateState] = useReducer(PanViewStateReducer, {
         x: 0, y: 0, scale: 1, containerRef: useRef(null), viewRef: useRef(null),
     });
@@ -161,23 +176,31 @@ export default function PanView({ stateFunction, draggable = true, onPanViewDrag
     return (
         <div className="panview-container" ref={state.containerRef}>
             <div
-                {...props}
-                className={`panview-view ${props.className ?? ""}`}
-                ref={state.viewRef}
-                onMouseMove={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-                    if (props.onMouseMove) props.onMouseMove(e);
-                    if (!e.isPropagationStopped()) handleMovement(e.nativeEvent);
+                style={{
+                    width: 0,
+                    height: 0,
                 }}
-                onDrag={(e: React.DragEvent<HTMLDivElement>) => {
-                    if (props.onDrag) props.onDrag(e);
-                    if (!e.isPropagationStopped()) handleMovement(e.nativeEvent);
-                }}
-                onWheel={(e: React.WheelEvent<HTMLDivElement>) => {
-                    if (props.onWheel) props.onWheel(e);
-                    if (!e.isPropagationStopped()) handleWheel(e.nativeEvent);
-                }}
-                draggable={false}
-            />
+            >
+                <div
+                    {...props}
+                    className={`panview-view ${props.className ?? ""}`}
+                    ref={state.viewRef}
+                    onMouseMove={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+                        if (props.onMouseMove) props.onMouseMove(e);
+                        if (!e.isPropagationStopped()) handleMovement(e.nativeEvent);
+                    }}
+                    onDrag={(e: React.DragEvent<HTMLDivElement>) => {
+                        if (props.onDrag) props.onDrag(e);
+                        if (!e.isPropagationStopped()) handleMovement(e.nativeEvent);
+                    }}
+                    onWheel={(e: React.WheelEvent<HTMLDivElement>) => {
+                        if (props.onWheel) props.onWheel(e);
+                        if (!e.isPropagationStopped()) handleWheel(e.nativeEvent);
+                    }}
+                    draggable={false}
+                />
+            </div>
+            {viewChildren}
         </div>
         /* <div id="dev-info">
             <p>Center: ({pos[0]}, {pos[1]})</p>
