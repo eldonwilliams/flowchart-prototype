@@ -2,8 +2,14 @@ import PanView, { PanViewCoordinatesToGlobal, PanViewState } from "../PanView";
 import './FlowchartRender.css';
 import { Fragment, useEffect, useState } from "react";
 import Canvas from "../../Canvas";
-import FlowchartPrimitive from "../../FlowchartComponents/FlowchartPrimitive";
-import FlowchartRectangle from "../FlowchartComponents/FlowchartRectangle";
+import FlowchartComponent, { FlowchartComponentTypes } from "../../FlowchartComponents";
+import RectangleComponent from "./RectangleComponent";
+import CircleComponent from "./CircleComponent";
+
+const ComponentRenders = {
+    [FlowchartComponentTypes.Rectangle]: RectangleComponent,
+    [FlowchartComponentTypes.Circle]: CircleComponent,
+}
 
 export interface FlowchartRenderProps {
 
@@ -17,10 +23,13 @@ export interface FlowchartRenderProps {
 export default function FlowchartRender(props: FlowchartRenderProps) {
     const [renderStateRef, setRenderStateRef] = useState<PanViewState | null>();
 
-    const [elements, setElements] = useState<FlowchartPrimitive[]>([]);
+    const [elements, setElements] = useState<FlowchartComponent[]>([]);
 
     useEffect(() => {
-        setElements([ new FlowchartRectangle(30, 50, 20, 10)])
+        setElements([
+            { x: 30, y: 10, connections: [], height: 20, width: 20, type: FlowchartComponentTypes.Rectangle, },
+            { x: 30, y: 50, connections: [], height: 20, width: 40, type: FlowchartComponentTypes.Circle, }
+        ])
     }, []);
 
     return (
@@ -47,7 +56,7 @@ export default function FlowchartRender(props: FlowchartRenderProps) {
                 }
             >
                 {elements.map((v, i) => <Fragment key={i}>
-                    {v.render()}
+                    {(ComponentRenders[v.type])({ ...v, setState: setElements, })}
                 </Fragment>)}
             </PanView>
         </>
