@@ -1,8 +1,8 @@
-import PanView, { PanViewCoordinatesToGlobal, PanViewState } from "./PanView";
+import PanView, { PanViewCoordinatesToGlobal, PanViewState } from "../PanView";
 import './FlowchartRender.css';
 import { Fragment, useEffect, useState } from "react";
-import Canvas from "../Canvas";
-import FlowchartPrimitive from "../FlowchartComponents/FlowchartPrimitive";
+import Canvas from "../../Canvas";
+import FlowchartPrimitive from "../../FlowchartComponents/FlowchartPrimitive";
 import FlowchartRectangle from "../FlowchartComponents/FlowchartRectangle";
 
 export interface FlowchartRenderProps {
