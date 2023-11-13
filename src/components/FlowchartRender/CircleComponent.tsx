@@ -1,8 +1,6 @@
 import FlowchartComponent from "../../FlowchartComponents";
 
-export default function CircleComponent(props: FlowchartComponent & {
-    setState: Function,
-}) {
+export default function CircleComponent(props: FlowchartComponent) {
     return (
         <div
             style={{

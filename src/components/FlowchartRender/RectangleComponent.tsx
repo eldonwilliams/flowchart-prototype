@@ -1,8 +1,6 @@
 import FlowchartComponent from "../../FlowchartComponents";
 
-export default function RectangleComponent(props: FlowchartComponent & {
-    setState: Function,
-}) {
+export default function RectangleComponent(props: FlowchartComponent) {
     return (
         <div
             style={{
@@ -14,9 +12,6 @@ export default function RectangleComponent(props: FlowchartComponent & {
                 background: 'white',
                 cursor: 'pointer',
             }}
-            onClick={() => props.setState([
-                { x: Math.random() * 30, y: Math.random() * 60, height: Math.random() * 10, width: Math.random() * 20, type: "Rectangle", connections: [], },
-            ])}
         />
     )
 }

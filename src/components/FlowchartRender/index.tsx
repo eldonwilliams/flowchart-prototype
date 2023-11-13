@@ -2,9 +2,10 @@ import PanView, { PanViewCoordinatesToGlobal, PanViewState } from "../PanView";
 import './FlowchartRender.css';
 import { Fragment, useEffect, useState } from "react";
 import Canvas from "../../Canvas";
-import FlowchartComponent, { FlowchartComponentTypes } from "../../FlowchartComponents";
+import FlowchartComponent, { FlowchartComponentTypes, createFlowchartComponent } from "../../FlowchartComponents";
 import RectangleComponent from "./RectangleComponent";
 import CircleComponent from "./CircleComponent";
+import useFlowchartComponents from "../../hooks/useFlowchartComponents";
 
 const ComponentRenders = {
     [FlowchartComponentTypes.Rectangle]: RectangleComponent,
@@ -16,6 +17,15 @@ export interface FlowchartRenderProps {
 }
 
 /**
+ * Props that are given to components
+ */
+export interface FlowchartComponentProps {
+
+}
+
+const component = createFlowchartComponent(FlowchartComponentTypes.Rectangle, 10, 10, 5, 5, 0);
+
+/**
  * A component whose job is to render a flowchart, given some data
  * Limited interaction
  * @returns 
@@ -23,14 +33,9 @@ export interface FlowchartRenderProps {
 export default function FlowchartRender(props: FlowchartRenderProps) {
     const [renderStateRef, setRenderStateRef] = useState<PanViewState | null>();
 
-    const [elements, setElements] = useState<FlowchartComponent[]>([]);
-
-    useEffect(() => {
-        setElements([
-            { x: 30, y: 10, connections: [], height: 20, width: 20, type: FlowchartComponentTypes.Rectangle, },
-            { x: 30, y: 50, connections: [], height: 20, width: 40, type: FlowchartComponentTypes.Circle, }
-        ])
-    }, []);
+    const [components, reduceComponents] = useFlowchartComponents([
+        component
+    ]);
 
     return (
         <>
@@ -55,10 +60,20 @@ export default function FlowchartRender(props: FlowchartRenderProps) {
                         />
                 }
             >
-                {elements.map((v, i) => <Fragment key={i}>
-                    {(ComponentRenders[v.type])({ ...v, setState: setElements, })}
+                {components.map((v, i) => <Fragment key={i}>
+                    {(ComponentRenders[v.type])(v)}
                 </Fragment>)}
             </PanView>
+            <button onClick={() => {
+                reduceComponents({
+                    action: 'move',
+                    element: component.uuid,
+                    payload: [Math.random() * 5, Math.random() * 5],
+                    set: true,
+                })
+            }}>
+                Randomly Update Component
+            </button>
         </>
     );
 }
