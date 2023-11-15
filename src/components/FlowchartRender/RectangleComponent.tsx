@@ -1,16 +1,16 @@
-import FlowchartComponent from "../../FlowchartComponents";
+import { FlowchartComponentProps } from ".";
+import useComponent from "./useComponent";
 
-export default function RectangleComponent(props: FlowchartComponent) {
+export default function RectangleComponent(props: FlowchartComponentProps) {
+    const componentProps = useComponent(props);
+
     return (
         <div
+            {...componentProps}
             style={{
-                position: 'absolute',
-                transform: `translate(${props.x}px, ${props.y}px)`,
-                width: props.width,
-                height: props.height,
+                ...componentProps.style,
                 border: '1px solid black',
                 background: 'white',
-                cursor: 'pointer',
             }}
         />
     )
