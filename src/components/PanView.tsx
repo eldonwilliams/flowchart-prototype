@@ -101,19 +101,6 @@ function PanViewStateReducer(state: PanViewState, action: PanViewStateReducerAct
     return stateCopy;
 }
 
-export function PanViewCoordinatesToGlobal(state: PanViewState, x: number, y: number): [number, number] {
-    const containerRect = state.containerRef.current?.getBoundingClientRect()!;
-    let [centerX, centerY] = [
-        containerRect.x - containerRect.left + containerRect.width / 2,
-        containerRect.y - containerRect.top + containerRect.height / 2
-    ];
-    // todo: may need to make center coords in the coordinate space of the canvas
-    return [
-        (x - state.x - centerX) * state.scale + centerX,
-        (y - state.y - centerY) * state.scale + centerY
-    ]
-}
-
 /**
  * A component with a inner object whose position is panned and dragged by the major element.
  * Can have children
