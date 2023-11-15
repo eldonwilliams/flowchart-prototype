@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FlowchartComponentProps } from ".";
+import { dilatePointAroundPoint, panviewPointToViewport } from "../../util/CoordinateMath";
 
 /**
  * The base behaviour for a component,
@@ -13,7 +14,7 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
     const [dragging, setDragging] = useState(false);
 
     useEffect(() => {
-        console.log(dragging);
+        document.body.style.cursor = dragging ? 'grabbing' : 'default';
         props.SetDraggable(!dragging);
         if (dragging == true) {
             const handleMouseUp = () => {
@@ -25,13 +26,20 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
             const handleMouseMove = (e: MouseEvent) => {
                 if (!dragging) return;
                 const viewRect = props.RenderState.viewRef.current?.getBoundingClientRect();
+                if (!viewRect) return;
+
+                // Calculate the mouse position relative to the viewRect
+                let x = e.clientX - viewRect.left;
+                let y = e.clientY - viewRect.top;
+
+                // Adjust for scale
+                x /= props.RenderState.scale;
+                y /= props.RenderState.scale;
+
                 props.ReduceComponents({
                     action: 'move',
                     element: props.uuid,
-                    payload: [
-                        e.clientX - (viewRect?.left ?? 0) - (props.width / 2),
-                        e.clientY - (viewRect?.top ?? 0) - (props.height / 2),
-                    ],
+                    payload: [x, y],
                 })
             }
 
