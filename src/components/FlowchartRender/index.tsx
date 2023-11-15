@@ -19,8 +19,22 @@ export interface FlowchartRenderProps {
 /**
  * Props that are given to components
  */
-export interface FlowchartComponentProps {
+export interface FlowchartComponentProps extends FlowchartComponent {
+    /**
+     * A reference to the render state of the panview of the parent renderer
+     */
+    RenderState: PanViewState;
 
+    /**
+     * A reference to the reduce components function in the parent renderer
+     * Allows a child component to modify its own state (or a sibling's state)
+     */
+    ReduceComponents: ReturnType<typeof useFlowchartComponents>[1];
+
+    /**
+     * Allows a component to perform a drag lock
+     */
+    SetDraggable: ReturnType<typeof useState<boolean>>[1]
 }
 
 const component = createFlowchartComponent(FlowchartComponentTypes.Rectangle, 10, 10, 5, 5, 0);
@@ -32,6 +46,7 @@ const component = createFlowchartComponent(FlowchartComponentTypes.Rectangle, 10
  */
 export default function FlowchartRender(props: FlowchartRenderProps) {
     const [renderStateRef, setRenderStateRef] = useState<PanViewState | null>();
+    const [draggable, setDraggable] = useState<boolean | undefined>(true);
 
     const [components, reduceComponents] = useFlowchartComponents([
         component
@@ -59,21 +74,17 @@ export default function FlowchartRender(props: FlowchartRenderProps) {
                             }}
                         />
                 }
+                draggable={draggable}
             >
                 {components.map((v, i) => <Fragment key={i}>
-                    {(ComponentRenders[v.type])(v)}
+                    {(ComponentRenders[v.type])({
+                        ...v,
+                        RenderState: renderStateRef!, // we know the renderStateRef is not null
+                        ReduceComponents: reduceComponents,
+                        SetDraggable: setDraggable,
+                    })}
                 </Fragment>)}
             </PanView>
-            <button onClick={() => {
-                reduceComponents({
-                    action: 'move',
-                    element: component.uuid,
-                    payload: [Math.random() * 5, Math.random() * 5],
-                    set: true,
-                })
-            }}>
-                Randomly Update Component
-            </button>
         </>
     );
 }
