@@ -1,11 +1,12 @@
-import PanView, { PanViewCoordinatesToGlobal, PanViewState } from "../PanView";
+import PanView, { PanViewState } from "../PanView";
 import './FlowchartRender.css';
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import Canvas from "../../Canvas";
 import FlowchartComponent, { FlowchartComponentTypes, createFlowchartComponent } from "../../FlowchartComponents";
 import RectangleComponent from "./RectangleComponent";
 import CircleComponent from "./CircleComponent";
 import useFlowchartComponents from "../../hooks/useFlowchartComponents";
+import { panviewPointToViewport } from "../../util/CoordinateMath";
 
 const ComponentRenders = {
     [FlowchartComponentTypes.Rectangle]: RectangleComponent,
@@ -62,8 +63,8 @@ export default function FlowchartRender(props: FlowchartRenderProps) {
                                 if (!renderStateRef) return;
                                 ctx.strokeStyle = "#000";
                                 ctx.beginPath();
-                                const [x1, y1] = PanViewCoordinatesToGlobal(renderStateRef, 10, 10);
-                                const [x2, y2] = PanViewCoordinatesToGlobal(renderStateRef, 30, 30);
+                                const [x1, y1] = panviewPointToViewport([10, 10], renderStateRef);
+                                const [x2, y2] = panviewPointToViewport([30, 30], renderStateRef);
                                 ctx.moveTo(x1, y1);
                                 ctx.lineTo(x2, y2);
                                 ctx.stroke();
