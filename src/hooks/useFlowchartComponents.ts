@@ -104,19 +104,19 @@ export default function useFlowchartComponents(components: FlowchartComponent[] 
                 // really messy, but it should work
                 return findElementAndModify(state, payload.element, (component) => ({
                     ...component,
-                    x: payload.payload[0] + (payload.set ?? true ? component.x : 0),
-                    y: payload.payload[1] + (payload.set ?? true ? component.y : 0)
+                    x: payload.payload[0] + (payload.set ?? true ? 0 : component.x),
+                    y: payload.payload[1] + (payload.set ?? true ? 0 : component.y)
                 }));
             case "resize":
                 return findElementAndModify(state, payload.element, (component) => ({
                     ...component,
-                    height: payload.payload[0] + (payload.set ?? true ? component.height : 0),
-                    width: payload.payload[1] + (payload.set ?? true ? component.width : 0),
+                    height: payload.payload[0] + (payload.set ?? true ? 0 : component.height),
+                    width: payload.payload[1] + (payload.set ?? true ? 0 : component.width),
                 }));
             case "rotate":
                 return findElementAndModify(state, payload.element, (component) => ({
                     ...component,
-                    rotation: payload.payload + (payload.set ?? true ? component.rotation : 0),
+                    rotation: payload.payload + (payload.set ?? true ? 0 : component.rotation),
                 }));
         }
         return state
