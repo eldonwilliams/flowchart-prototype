@@ -38,7 +38,7 @@ export interface FlowchartComponentProps extends FlowchartComponent {
     SetDraggable: ReturnType<typeof useState<boolean>>[1]
 }
 
-const component = createFlowchartComponent(FlowchartComponentTypes.Rectangle, 10, 10, 5, 5, 0);
+const component = createFlowchartComponent(FlowchartComponentTypes.Rectangle, 10, 10, 30, 30, 0);
 
 /**
  * A component whose job is to render a flowchart, given some data
