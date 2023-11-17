@@ -1,6 +1,38 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FlowchartComponentProps } from ".";
-import { dilatePointAroundPoint, panviewPointToViewport } from "../../util/CoordinateMath";
+import useMousePosition from "../../hooks/useMousePosition";
+import { dilatePointAroundPoint } from "../../util/CoordinateMath";
+
+interface DragState {
+    /**
+     * If the component is currently being dragged
+     */
+    dragging: boolean;
+
+    /**
+     * If the component is being resized by the drag ( > 0
+     * And the direction can be determined by binary ANDing with the following:
+     * - 0b0001 - Top
+     * - 0b0010 - Right
+     * - 0b0100 - Bottom
+     * - 0b1000 - Left
+     * 
+     * Contridicting directions such as 0b0011 (Top and Right) are allowed
+     * 
+     * Combinations of directions may be given, such as 0b1010 (Top and Left)
+     */
+    resizing: number;
+
+    /**
+     * Where the mouse was when the drag started
+     */
+    x: number;
+
+    /**
+     * Where the mouse was when the drag started
+     */
+    y: number;
+}
 
 /**
  * The base behaviour for a component,
@@ -11,20 +43,80 @@ import { dilatePointAroundPoint, panviewPointToViewport } from "../../util/Coord
  * @returns a object that should be spread into the div returned from a component
  */
 export default function useComponent(props: FlowchartComponentProps): JSX.IntrinsicElements["div"]  {
-    const [dragging, setDragging] = useState(false);
+    const componentRef = useRef<HTMLDivElement>(null);
+    
+    const [dragging, setDragging] = useState<DragState>({
+        dragging: false,
+        x: 0,
+        y: 0,
+        resizing: 0,
+    });
+
+    const [elementCursor, setElementCursor] = useState('auto');
+
+    const mousePos = useMousePosition();
+
+    /**
+     * Checks if a point is on the edge of a rectangle, and if so, which edge(s)
+     * 
+     * (uses binary flags to determine which edges are being hovered over)
+     * 
+     * @param x 
+     * @param y 
+     * @param rect 
+     * @param threshold
+     */
+    function isPointOnRectEdge(x: number, y: number, rect: DOMRect, threshold: number = 10): number {
+        if (!props.RenderState) return 0;
+        let result = 0;
+
+        threshold *= props.RenderState.scale;
+
+        // check if the mouse is in the rectangle at all
+        if (x < rect.x || x > rect.x + rect.width || y < rect.y || y > rect.y + rect.height) return 0;
+
+        if (y - rect.y < threshold) result |= 0b0001; // top
+        else if (y - rect.y > rect.height - threshold) result |= 0b0100; // bottom
+
+        if (x - rect.x > rect.width - threshold) result |= 0b0010; // right
+        else if (x - rect.x < threshold) result |= 0b1000; // left
+
+        return result;
+    }
+
+    function getElementCursor() {
+        if (!componentRef.current) return 'auto';
+        const resize = isPointOnRectEdge(mousePos.x, mousePos.y, componentRef.current.getBoundingClientRect());
+        if (resize > 0) {
+            let resizeString = '';
+            if (resize & 0b0001) resizeString += 'n';
+            if (resize & 0b0100) resizeString += 's'; // south before east, cause idk
+            if (resize & 0b0010) resizeString += 'e';
+            if (resize & 0b1000) resizeString += 'w';
+            return resizeString + '-resize';
+        }
+        return dragging.dragging ? 'grabbing' : 'grab';
+    }
 
     useEffect(() => {
-        document.body.style.cursor = dragging ? 'grabbing' : 'default';
-        props.SetDraggable(!dragging);
-        if (dragging == true) {
+        setElementCursor(getElementCursor());
+        console.log(elementCursor);
+    }, [mousePos, dragging, componentRef])
+
+    useEffect(() => {
+    
+        document.body.style.cursor = dragging.dragging ? 'grabbing' : 'auto';
+        props.SetDraggable(!dragging.dragging);
+        if (dragging.dragging == true) {
             const handleMouseUp = () => {
-                setDragging(false)
+                setDragging(drag => ({ ...drag, dragging: false, }));
             }
 
             window.addEventListener('mouseup', handleMouseUp);
 
             const handleMouseMove = (e: MouseEvent) => {
-                if (!dragging) return;
+
+                if (!dragging.dragging) return;
                 const viewRect = props.RenderState.viewRef.current?.getBoundingClientRect();
                 if (!viewRect) return;
 
@@ -32,15 +124,50 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
                 let x = e.clientX - viewRect.left;
                 let y = e.clientY - viewRect.top;
 
+                // Subtract the original mouse position, so the component doesn't jump
+                x -= dragging.x;
+                y -= dragging.y;
+
                 // Adjust for scale
                 x /= props.RenderState.scale;
                 y /= props.RenderState.scale;
 
-                props.ReduceComponents({
-                    action: 'move',
-                    element: props.uuid,
-                    payload: [x, y],
-                })
+                if (dragging.resizing == 0) {
+                    props.ReduceComponents({
+                        action: 'move',
+                        element: props.uuid,
+                        payload: [x, y],
+                    })
+                } else {
+                    // calculate the new width and height and position
+                    // if moving in the given axis, allow movement
+                    let offsetWidth = ((dragging.resizing & 0b0010) > 0 ||
+                        (dragging.resizing & 0b1000) > 0) ? e.movementX : 0;
+
+                    // invert because we're moving the left edge, not the right
+                    if ((dragging.resizing & 0b1000) > 0) offsetWidth = -offsetWidth;
+
+                    let offsetHeight = ((dragging.resizing & 0b0001) > 0 ||
+                        (dragging.resizing & 0b0100) > 0) ? e.movementY : 0;
+                    
+                    // invert because we're moving the top edge, not the bottom
+                    if ((dragging.resizing & 0b0001) > 0) offsetHeight = -offsetHeight;
+
+                    // offset the position by the movement in the given axis, if moving in -that- axis
+                    let offsetX = (dragging.resizing & 0b1000) > 0 ? e.movementX : 0;
+                    let offsetY = (dragging.resizing & 0b0001) > 0 ? e.movementY : 0;
+
+                    props.ReduceComponents({
+                        action: 'modify',
+                        element: props.uuid,
+                        payload: {
+                            width: props.width + offsetWidth,
+                            height: props.height + offsetHeight,
+                            x: props.x + offsetX,
+                            y: props.y + offsetY,
+                        }
+                    })
+                }
             }
 
             window.addEventListener('mousemove', handleMouseMove);
@@ -49,7 +176,7 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
                 window.removeEventListener('mousemove', handleMouseMove);
             }
         }
-    }, [dragging])
+    }, [dragging, props])
 
     return {
         style: {
@@ -57,9 +184,20 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
             transform: `translate(${props.x}px, ${props.y}px) rotate(${props.rotation}deg)`,
             width: props.width,
             height: props.height,
-            opacity: dragging ? 1 : 0.5,
-            cursor: 'pointer',
+            cursor: elementCursor,
         },
-        onMouseDown: () => setDragging(true),
+        onMouseDown: (e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+
+            let resizing = isPointOnRectEdge(e.clientX, e.clientY, rect);
+            
+            setDragging({
+                dragging: true,
+                x: e.clientX - rect.x,
+                y: e.clientY - rect.y,
+                resizing,
+            })
+        },
+        ref: componentRef,
     };
 }
