@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { FlowchartComponentProps } from ".";
 import useMousePosition from "../../hooks/useMousePosition";
-import { dilatePointAroundPoint } from "../../util/CoordinateMath";
 
 interface DragState {
     /**
      * If the component is currently being dragged
      */
     dragging: boolean;
+
+    /**
+     * If the component is being hovered over
+     */
+    hover: boolean;
 
     /**
      * If the component is being resized by the drag ( > 0
@@ -44,17 +48,15 @@ interface DragState {
  */
 export default function useComponent(props: FlowchartComponentProps): JSX.IntrinsicElements["div"]  {
     const componentRef = useRef<HTMLDivElement>(null);
+    const mousePosition = useMousePosition();
     
     const [dragging, setDragging] = useState<DragState>({
         dragging: false,
+        hover: false,
         x: 0,
         y: 0,
         resizing: 0,
     });
-
-    const [elementCursor, setElementCursor] = useState('auto');
-
-    const mousePos = useMousePosition();
 
     /**
      * Checks if a point is on the edge of a rectangle, and if so, which edge(s)
@@ -84,32 +86,30 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
         return result;
     }
 
-    function getElementCursor() {
-        if (!componentRef.current) return 'auto';
-        const resize = isPointOnRectEdge(mousePos.x, mousePos.y, componentRef.current.getBoundingClientRect());
+    useEffect(() => {
+        if (dragging.resizing > 0) return;
+        if (!componentRef.current) {
+            document.body.style.cursor = "auto";
+            return;
+        }
+        const resize = isPointOnRectEdge(mousePosition.x, mousePosition.y, componentRef.current.getBoundingClientRect());
         if (resize > 0) {
             let resizeString = '';
             if (resize & 0b0001) resizeString += 'n';
             if (resize & 0b0100) resizeString += 's'; // south before east, cause idk
             if (resize & 0b0010) resizeString += 'e';
             if (resize & 0b1000) resizeString += 'w';
-            return resizeString + '-resize';
+            document.body.style.cursor = resizeString + '-resize';
+            return;
         }
-        return dragging.dragging ? 'grabbing' : 'grab';
-    }
+        document.body.style.cursor = dragging.dragging ? 'grabbing' : 'grab';
+    }, [dragging.dragging, dragging.resizing, mousePosition, componentRef])
 
     useEffect(() => {
-        setElementCursor(getElementCursor());
-        console.log(elementCursor);
-    }, [mousePos, dragging, componentRef])
-
-    useEffect(() => {
-    
-        document.body.style.cursor = dragging.dragging ? 'grabbing' : 'auto';
         props.SetDraggable(!dragging.dragging);
         if (dragging.dragging == true) {
             const handleMouseUp = () => {
-                setDragging(drag => ({ ...drag, dragging: false, }));
+                setDragging(drag => ({ ...drag, dragging: false, resizing: 0, }));
             }
 
             window.addEventListener('mouseup', handleMouseUp);
@@ -184,7 +184,6 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
             transform: `translate(${props.x}px, ${props.y}px) rotate(${props.rotation}deg)`,
             width: props.width,
             height: props.height,
-            cursor: elementCursor,
         },
         onMouseDown: (e) => {
             const rect = e.currentTarget.getBoundingClientRect();
@@ -196,8 +195,11 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
                 x: e.clientX - rect.x,
                 y: e.clientY - rect.y,
                 resizing,
+                hover: dragging.hover,
             })
         },
+        onMouseEnter: () => setDragging(d => ({ ...d, hover: true, })),
+        onMouseLeave: () => setDragging(d => ({ ...d, hover: false, })),
         ref: componentRef,
     };
 }
