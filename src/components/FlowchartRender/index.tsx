@@ -39,6 +39,7 @@ export interface FlowchartComponentProps extends FlowchartComponent {
 }
 
 const component = createFlowchartComponent(FlowchartComponentTypes.Rectangle, 10, 10, 30, 30, 0);
+const otherComponent = createFlowchartComponent(FlowchartComponentTypes.Circle, 50, 10, 15, 20, 0);
 
 /**
  * A component whose job is to render a flowchart, given some data
@@ -50,7 +51,8 @@ export default function FlowchartRender(props: FlowchartRenderProps) {
     const [draggable, setDraggable] = useState<boolean | undefined>(true);
 
     const [components, reduceComponents] = useFlowchartComponents([
-        component
+        component,
+        otherComponent
     ]);
 
     return (
