@@ -8,7 +8,7 @@ export default function CircleComponent(props: FlowchartComponentProps) {
         <div
             {...componentProps}
             style={{
-                ...componentProps,
+                ...componentProps.style,
                 border: '1px solid black',
                 background: 'white',
                 borderRadius: '100%',
