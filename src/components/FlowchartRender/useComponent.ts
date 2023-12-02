@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { MouseEventHandler, useEffect, useRef, useState } from "react";
 import { FlowchartComponentProps } from ".";
 import useMousePosition from "../../hooks/useMousePosition";
 
@@ -102,11 +102,24 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
             document.body.style.cursor = resizeString + '-resize';
             return;
         }
+        if (!dragging.hover) {
+            return;
+        }
         document.body.style.cursor = dragging.dragging ? 'grabbing' : 'grab';
     }, [dragging.dragging, dragging.resizing, mousePosition, componentRef])
 
+    // when hover is false, reset value, but only if we are not doing something
     useEffect(() => {
-        props.SetDraggable(!dragging.dragging);
+        if (dragging.hover == false && dragging.dragging != true) {
+            document.body.style.cursor = "auto";
+        }
+    }, [dragging.hover, dragging.dragging]);
+
+    useEffect(() => {
+        if (dragging.hover) {
+            props.SetDraggable(!dragging.dragging);
+        }
+
         if (dragging.dragging == true) {
             const handleMouseUp = () => {
                 setDragging(drag => ({ ...drag, dragging: false, resizing: 0, }));
@@ -157,6 +170,11 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
                     let offsetX = (dragging.resizing & 0b1000) > 0 ? e.movementX : 0;
                     let offsetY = (dragging.resizing & 0b0001) > 0 ? e.movementY : 0;
 
+                    offsetHeight /= props.RenderState.scale;
+                    offsetWidth /= props.RenderState.scale;
+                    offsetX /= props.RenderState.scale;
+                    offsetY /= props.RenderState.scale;
+
                     props.ReduceComponents({
                         action: 'modify',
                         element: props.uuid,
@@ -178,6 +196,23 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
         }
     }, [dragging, props])
 
+    const onMouseEnter = () => setDragging(d => ({ ...d, hover: true, }));
+    const onMouseLeave = () => setDragging(d => ({ ...d, hover: false, }));
+
+    const onMouseDown: MouseEventHandler<HTMLDivElement> = (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+
+        let resizing = isPointOnRectEdge(e.clientX, e.clientY, rect);
+
+        setDragging({
+            dragging: true,
+            x: e.clientX - rect.x,
+            y: e.clientY - rect.y,
+            resizing,
+            hover: dragging.hover,
+        });
+    };
+    
     return {
         style: {
             position: 'absolute',
@@ -185,21 +220,9 @@ export default function useComponent(props: FlowchartComponentProps): JSX.Intrin
             width: props.width,
             height: props.height,
         },
-        onMouseDown: (e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-
-            let resizing = isPointOnRectEdge(e.clientX, e.clientY, rect);
-            
-            setDragging({
-                dragging: true,
-                x: e.clientX - rect.x,
-                y: e.clientY - rect.y,
-                resizing,
-                hover: dragging.hover,
-            })
-        },
-        onMouseEnter: () => setDragging(d => ({ ...d, hover: true, })),
-        onMouseLeave: () => setDragging(d => ({ ...d, hover: false, })),
         ref: componentRef,
+        onMouseDown,
+        onMouseEnter,
+        onMouseLeave,
     };
 }
