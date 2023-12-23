@@ -1,0 +1,159 @@
+{
+  "main": {
+    "id": "3fd4dfb79cd8ece0",
+    "type": "split",
+    "children": [
+      {
+        "id": "b8eeef9235564705",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f08433396711d435",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Case Studies - How Other Products Render Flowcharts Efficiently.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "99dc3c43739c6783",
+    "type": "split",
+    "children": [
+      {
+        "id": "d889f6827b8b9326",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d87c8110b5a73207",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "80b4527930b87da6",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "7e6eec2f3ff039d2",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "47ffd0e1a38e6842",
+    "type": "split",
+    "children": [
+      {
+        "id": "b2887c52a3be51ce",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9b635b8715d080dc",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Case Studies - How Other Products Render Flowcharts Efficiently.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "76683132117daeca",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Case Studies - How Other Products Render Flowcharts Efficiently.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "5d0f6c40464d0a0b",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "9960011b276f8c9b",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Case Studies - How Other Products Render Flowcharts Efficiently.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "f08433396711d435",
+  "lastOpenFiles": [
+    "resources/Pasted image 20231222174911.png",
+    "Case Studies - How Other Products Render Flowcharts Efficiently.md",
+    "resources",
+    "Pasted image 20231222180208.png",
+    "resources/Pasted image 20231222175237.png",
+    "Untitled.canvas",
+    "2023-12-22.md"
+  ]
+}
